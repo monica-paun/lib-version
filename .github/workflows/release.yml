@@ -11,10 +11,16 @@ jobs:
     name: Generate Release
     runs-on: ubuntu-latest
     steps:
+      - name: Create GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
           persist-credentials: false
           fetch-depth: 0
       - name: Install GitVersion
@@ -29,7 +35,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
           tag_name: ${{ steps.gitversion.outputs.semVer }}
           name: Release ${{ steps.gitversion.outputs.semVer }}
           target_commitish: ${{ github.sha }}
@@ -56,9 +62,15 @@ jobs:
       - name: Install build tools
         run: |
           pip install build
-      - name: Inject version into pyproject.toml
+      - name: Inject version into lib_version
         run: |
-          sed -i "s/version = \"0.0.0\"/version = \"${version}\"/" pyproject.toml
+          echo "__version__ = \"${version}\"" > lib_version/version.py
       - name: Build package
         run: |
-          LIB_VERSION_VERSION=${version} python -m build
+          python -m build
+      - name: Upload package
+        run: actions/upload-artifact@v4
+        with:
+          name: lib-version
+          path: dist/
+
