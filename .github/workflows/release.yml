@@ -58,8 +58,6 @@ jobs:
           pip install build
       - name: Inject version into lib_version
         run: |
-            pwd
-            ls
             echo "__version__ = \"${version}\"" > lib_version/version.py
       - name: Build package
         run: |
