@@ -69,7 +69,7 @@ jobs:
         run: |
           python -m build
       - name: Upload package
-        run: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: lib-version
           path: dist/
