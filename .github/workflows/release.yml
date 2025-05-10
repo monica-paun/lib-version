@@ -26,24 +26,6 @@ jobs:
         uses: gittools/actions/gitversion/execute@v3.2.1
         with:
           useConfigFile: true
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ steps.gitversion.outputs.semVer }}
-          name: Release ${{ steps.gitversion.outputs.semVer }}
-          target_commitish: ${{ github.sha }}
-          generate_release_notes: true
-          prerelease: ${{ contains(steps.gitversion.outputs.semVer, '-') }}
-        
-  build:
-    runs-on: ubuntu-latest
-    needs: tag-release
-    env:
-      version: ${{ needs.tag-release.outputs.version }}
-
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -58,7 +40,7 @@ jobs:
           pip install build
       - name: Inject version into lib_version
         run: |
-            echo "__version__ = \"${version}\"" > lib_version/version.py
+            echo "__version__ = \"${{ steps.gitversion.outputs.semVer }}\"" > lib_version/version.py
       - name: Build package
         run: |
             python -m build
@@ -67,4 +49,14 @@ jobs:
         with:
           name: lib-version
           path: dist/*
-
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.gitversion.outputs.semVer }}
+          name: Release ${{ steps.gitversion.outputs.semVer }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          prerelease: ${{ contains(steps.gitversion.outputs.semVer, '-') }}
+       
