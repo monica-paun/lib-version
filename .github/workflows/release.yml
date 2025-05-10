@@ -58,8 +58,7 @@ jobs:
           pip install build
       - name: Inject version into lib_version
         run: |
-          echo "__version__ = \"${version}\"" > lib_version/version.py
-      - name: Build package
+            echo "__version__ = \"${version}\"" > version.py
         run: |
           python -m build
       - name: Upload package
